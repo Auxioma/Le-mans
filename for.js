@@ -138,7 +138,7 @@ function main() {
     );
 
     // Ajout d'un écouteur d'événement sur chaque bouton (case du jeu)
-    for (var i = 0, len = pions.length; i < len; i++) {
+    for (var i = 0;  i < pions.length; i++) {
         pions[i].addEventListener("click", function() {
             if (jeuEstFini) return; // Si la partie est terminée, ne rien faire
 

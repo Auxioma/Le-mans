@@ -1,0 +1,253 @@
+<!doctype html> <!-- Définition du type de document HTML5 -->
+<html>
+
+<head>
+   <style>
+      /* Conteneur principal avec affichage en flexbox */
+      #cont {
+         display: flex;
+      }
+
+      /* Grille de sélection des nombres */
+      #grille {
+         width: 50%;
+      }
+
+      /* Conteneur du tirage */
+      #ctirage {
+         display: inline-block;
+      }
+
+      /* Zone d'affichage du tirage */
+      #tirage {
+         height: 220px;
+         width: 50%;
+         text-align: right;
+      }
+
+      /* Affichage du nombre de bons résultats */
+      #bon {
+         font: 72pt monospace;
+         margin: 30px auto;
+         text-align: center;
+         visibility: hidden; /* Caché par défaut */
+         background-color: #48C;
+         color: #FFF;
+         width: 120px;
+         height: 120px;
+         border-radius: 100px; /* Cercle */
+         line-height: 120px;
+      }
+
+      /* Bouton de sélection des nombres */
+      .bouton {
+         width: 26px;
+         height: 26px;
+         text-align: center;
+         font: 11pt monospace;
+         border: solid 1px #48C;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         margin: 3px;
+         cursor: pointer;
+         transition: all 0.3s ease;
+      }
+
+      /* Effet au survol des boutons */
+      .bouton:hover {
+         background-color: #48C;
+         color: #FFF;
+         transform: scale(1.4);
+      }
+
+      /* Boutons affichant les numéros tirés */
+      .zbouton {
+         width: 26px;
+         height: 26px;
+         text-align: center;
+         font: 11pt monospace;
+         border: solid 1px #48C;
+         background-color: #F8F8F8;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         margin: 3px;
+         color: #48C;
+      }
+
+      /* Boutons affichant les numéros sélectionnés */
+      .nbouton {
+         width: 26px;
+         height: 26px;
+         text-align: center;
+         font: 11pt monospace;
+         border: solid 1px #48C;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         margin: 3px;
+         color: #000;
+      }
+
+      /* Style du bouton "Commencer une partie" */
+      button {
+         border: none;
+         cursor: pointer;
+         display: block;
+         width: 300px;
+         background-color: #48C;
+         padding: 10px;
+         font-size: 13pt;
+         color: #FFF;
+         text-decoration: none;
+         font-family: arial, sans-serif;
+         margin: 10px auto;
+         margin-bottom: 10px;
+      }
+
+      /* Effet au survol du bouton */
+      button:hover {
+         opacity: 0.8;
+      }
+   </style>
+<script>
+   // Fonction d'initialisation, appelée lors du démarrage du jeu
+   function init(btn) {
+      btn.style.display = "none"; // Cache le bouton après le clic pour éviter plusieurs initialisations
+      i = 1; // Initialise le compteur de numéros
+      nbr = 0; // Initialise le compteur des nombres sélectionnés par l'utilisateur
+      choix = new Array(); // Crée un tableau pour stocker les choix de l'utilisateur
+      creerGrille(); // Appelle la fonction pour générer la grille de jeu
+   }
+
+   // Fonction pour créer la grille de 49 numéros
+   function creerGrille() {
+      t = setTimeout("creerGrille()", 50); // Répète la création avec un délai de 50ms pour un effet progressif
+
+      // Création d'un bouton représentant un numéro de la grille
+      bouton = document.createElement("div"); 
+      bouton.className = "bouton"; // Ajout d'une classe CSS pour le style
+      bouton.innerHTML = i; // Définit le texte du bouton avec le numéro actuel
+      bouton.setAttribute("id", i); // Associe un identifiant unique au bouton
+      bouton.onclick = function () {
+         ajouter(this); // Associe la fonction de sélection du numéro lors du clic
+      }
+      document.getElementById("grille").appendChild(bouton); // Ajoute le bouton à la grille
+
+      // Insère un saut de ligne après chaque série de 7 boutons pour structurer l'affichage
+      if (i % 7 == 0) {
+         br = document.createElement("br");
+         document.getElementById("grille").appendChild(br);
+      }
+
+      i += 1; // Incrémente le numéro affiché sur la grille
+      if (i > 49) // Une fois les 49 numéros créés, arrête la boucle de génération
+         clearTimeout(t);
+   }
+
+   // Fonction pour ajouter un numéro sélectionné par l'utilisateur
+   function ajouter(ob) {
+      if (nbr < 6) { // Vérifie si l'utilisateur n'a pas déjà sélectionné 6 numéros
+         ob.style.visibility = "hidden"; // Cache le bouton sélectionné
+
+         // Crée un nouvel élément pour afficher le numéro sélectionné
+         nbouton = document.createElement("div"); 
+         nbouton.className = "nbouton"; // Applique une classe CSS
+         nbouton.setAttribute("id", "ch" + nbr); // Donne un identifiant unique
+         nbouton.innerHTML = ob.textContent; // Associe le contenu au numéro sélectionné
+         document.getElementById("choix").appendChild(nbouton); // Ajoute le numéro sélectionné à la liste affichée
+
+         choix[nbr] = ob.firstChild.nodeValue; // Stocke la valeur sélectionnée dans le tableau des choix
+         nbr += 1; // Incrémente le compteur des choix
+
+         if (nbr == 6) // Si l'utilisateur a choisi 6 numéros, démarre le tirage
+            ztirage();
+      }
+   }
+
+   j = 0;
+   // Fonction pour préparer l'affichage du tirage
+   function ztirage() {
+      setTimeout("ztirage()", 100); // Ajoute un délai pour un affichage progressif
+
+      if (j < 6) { // Génère 6 zones pour les résultats du tirage
+         zbouton = document.createElement("div"); // Crée un élément pour afficher le numéro tiré
+         zbouton.className = "zbouton"; // Applique un style CSS
+         zbouton.innerHTML = 0; // Initialise l'affichage à zéro
+         zbouton.setAttribute("id", "res" + j); // Attribue un identifiant unique
+         document.getElementById("res").appendChild(zbouton); // Ajoute le bouton au bloc d'affichage des résultats
+         j += 1;
+
+         if (j == 6) { // Une fois les 6 zones créées, rend visible le compteur de bons numéros et démarre le tirage
+            document.getElementById("bon").style.visibility = "visible";
+            tirage();
+         }
+      }
+   }
+
+   index = 0;
+   rep = 0;
+   tab = new Array();
+   itr = 50; // Nombre de répétitions du tirage pour chaque numéro
+
+   // Fonction qui effectue le tirage aléatoire des numéros gagnants
+   function tirage() {
+      tx = setTimeout("tirage()", 40); // Animation du tirage avec un délai de 40ms
+      rep += 1; // Incrémente le compteur des répétitions
+
+      if (rep < itr) { // Continue à tirer les numéros jusqu'à atteindre le nombre d'itérations
+         for (k = index + 1; k < 6; k++) // Affecte des nombres aléatoires aux cases restantes
+            document.getElementById("res" + k).innerHTML = Math.ceil(Math.random() * 49);
+
+         v = Math.ceil(Math.random() * 49); // Génère un numéro aléatoire entre 1 et 49
+         document.getElementById("res" + index).innerHTML = v; // Affiche le numéro tiré
+
+         if (rep == itr - 1) { // Vérifie si ce numéro a déjà été tiré
+            if (tab.indexOf(v) == -1) { // Si le numéro est unique, l'ajoute au tableau
+               tab[index] = v;
+
+               for (k = 0; k < 6; k++) { // Vérifie si le numéro tiré correspond aux choix de l'utilisateur
+                  if (document.getElementById("ch" + k).firstChild.data == tab[index]) {
+                     // Met en évidence les correspondances avec une couleur spéciale
+                     document.getElementById("ch" + k).style.backgroundColor = "#48C";
+                     document.getElementById("res" + index).style.backgroundColor = "#48C";
+                     document.getElementById("ch" + k).style.color = "#FFF";
+                     document.getElementById("res" + index).style.color = "#FFF";
+                     // Incrémente le compteur des bons numéros trouvés
+                     document.getElementById("bon").innerHTML = parseInt(document.getElementById("bon").textContent) + 1;
+                  }
+               }
+            } else {
+               rep = itr - 2; // Relance le tirage si le numéro est déjà présent
+            }
+         }
+      } else {
+         rep = 0;
+         index += 1; // Passe au tirage du numéro suivant
+
+         if (index == 6) { // Une fois les 6 numéros tirés, arrête le tirage
+            clearTimeout(tx);
+            return false;
+         }
+      }
+   }
+</script>
+
+</head>
+
+<body>
+   <button onClick="init(this)">Commencer une partie</button> <!-- Bouton de démarrage -->
+   <div id="cont">
+      <div id="grille"></div> <!-- Grille des numéros -->
+      <div id="tirage">
+         <div id="ctirage">
+            <div id="choix"></div> <!-- Affichage des choix -->
+            <div id="res"></div> <!-- Résultats du tirage -->
+            <div id="bon">0</div> <!-- Nombre de bons numéros -->
+         </div>
+      </div>
+   </div>
+</body>
+
+</html>
