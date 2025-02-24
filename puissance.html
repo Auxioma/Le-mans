@@ -65,101 +65,124 @@
     <h2 id="status">Tour du joueur 🔴</h2>
     <div class="board"></div>
     <button id="restart">Rejouer</button>
+</body>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const board = document.querySelector(".board");
-            const statusText = document.getElementById("status");
-            const restartButton = document.getElementById("restart");
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        class Connect4 {
+            constructor(boardSelector, statusSelector, restartSelector) {
+                this.board = document.querySelector(boardSelector);
+                this.statusText = document.querySelector(statusSelector);
+                this.restartButton = document.querySelector(restartSelector);
 
-            const rows = 6, cols = 7;
-            let currentPlayer = "red";
-            let gameBoard, gameActive;
+                this.numRows = 6;
+                this.numCols = 7;
 
-            function initGame() {
-                gameBoard = Array.from({ length: rows }, () => Array(cols).fill(null));
-                gameActive = true;
-                currentPlayer = "red";
-                statusText.textContent = "Tour du joueur 🔴";
-                renderBoard();
+                this.currentPlayer = "red";
+                this.gameActive = true;
+                this.gameBoard = [];
+
+                this.initGame();
+                this.restartButton.addEventListener("click", () => this.initGame());
             }
 
-            function renderBoard() {
-                board.innerHTML = "";
-                for (let row = 0; row < rows; row++) {
-                    for (let col = 0; col < cols; col++) {
+            initGame() {
+                this.gameBoard = Array.from({ length: this.numRows }, () => Array(this.numCols).fill(null));
+                this.gameActive = true;
+                this.currentPlayer = "red";
+                this.statusText.textContent = "Player's turn 🔴";
+                this.renderBoard();
+            }
+
+            renderBoard() {
+                this.board.innerHTML = "";
+                for (let row = 0; row < this.numRows; row++) {
+                    for (let col = 0; col < this.numCols; col++) {
                         const cell = document.createElement("div");
                         cell.classList.add("cell");
                         cell.dataset.row = row;
                         cell.dataset.col = col;
-                        board.appendChild(cell);
+                        cell.addEventListener("click", () => this.dropPiece(col));
+                        this.board.appendChild(cell);
                     }
                 }
-                board.querySelectorAll(".cell").forEach(cell =>
-                    cell.addEventListener("click", () => dropPiece(parseInt(cell.dataset.col)))
-                );
             }
 
-            function dropPiece(col) {
-                if (!gameActive) return;
+            dropPiece(col) {
+                if (!this.gameActive) return;
 
-                for (let row = rows - 1; row >= 0; row--) {
-                    if (!gameBoard[row][col]) {
-                        gameBoard[row][col] = currentPlayer;
-                        updateBoard();
-                        if (checkWinner(row, col)) {
-                            statusText.textContent = `Le joueur ${currentPlayer === "red" ? "🔴" : "🟡"} a gagné ! 🎉`;
-                            gameActive = false;
-                        } else if (gameBoard.flat().every(cell => cell !== null)) {
-                            statusText.textContent = "Match nul ! 🤝";
-                            gameActive = false;
+                for (let row = this.numRows - 1; row >= 0; row--) {
+                    if (!this.gameBoard[row][col]) {
+                        this.gameBoard[row][col] = this.currentPlayer;
+                        this.animateDrop(row, col);
+
+                        if (this.checkWinner(row, col)) {
+                            this.statusText.textContent = `Player ${this.currentPlayer === "red" ? "🔴" : "🟡"} wins! 🎉`;
+                            this.gameActive = false;
+                        } else if (this.gameBoard.flat().every(cell => cell !== null)) {
+                            this.statusText.textContent = "Draw! 🤝";
+                            this.gameActive = false;
                         } else {
-                            currentPlayer = currentPlayer === "red" ? "yellow" : "red";
-                            statusText.textContent = `Tour du joueur ${currentPlayer === "red" ? "🔴" : "🟡"}`;
+                            this.switchPlayer();
                         }
                         return;
                     }
                 }
             }
 
-            function updateBoard() {
-                board.querySelectorAll(".cell").forEach(cell => {
+            animateDrop(row, col) {
+                const cells = this.board.querySelectorAll(".cell");
+                let cell = [...cells].find(c => c.dataset.row == row && c.dataset.col == col);
+
+                cell.classList.add(this.currentPlayer, "falling");
+                setTimeout(() => {
+                    cell.classList.remove("falling");
+                }, 5000);
+            }
+
+            updateBoard() {
+                this.board.querySelectorAll(".cell").forEach(cell => {
                     const { row, col } = cell.dataset;
                     cell.classList.remove("red", "yellow");
-                    if (gameBoard[row][col]) cell.classList.add(gameBoard[row][col]);
+                    if (this.gameBoard[row][col]) cell.classList.add(this.gameBoard[row][col]);
                 });
             }
 
-            function checkWinner(r, c) {
-                return checkDirection(r, c, 1, 0) || // Vertical
-                    checkDirection(r, c, 0, 1) || // Horizontal
-                    checkDirection(r, c, 1, 1) || // Diagonal /
-                    checkDirection(r, c, 1, -1);  // Diagonal \
+            switchPlayer() {
+                this.currentPlayer = this.currentPlayer === "red" ? "yellow" : "red";
+                this.statusText.textContent = `Player's turn ${this.currentPlayer === "red" ? "🔴" : "🟡"}`;
             }
 
-            function checkDirection(r, c, dr, dc) {
-                let color = gameBoard[r][c];
+            checkWinner(r, c) {
+                return this.checkDirection(r, c, 1, 0) ||
+                    this.checkDirection(r, c, 0, 1) ||
+                    this.checkDirection(r, c, 1, 1) ||
+                    this.checkDirection(r, c, 1, -1);
+            }
+
+            checkDirection(r, c, dr, dc) {
+                let color = this.gameBoard[r][c];
                 let count = 1;
 
                 for (let i = 1; i < 4; i++) {
                     let nr = r + dr * i, nc = c + dc * i;
-                    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || gameBoard[nr][nc] !== color) break;
+                    if (nr < 0 || nr >= this.numRows || nc < 0 || nc >= this.numCols || this.gameBoard[nr][nc] !== color) break;
                     count++;
                 }
+
                 for (let i = 1; i < 4; i++) {
                     let nr = r - dr * i, nc = c - dc * i;
-                    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || gameBoard[nr][nc] !== color) break;
+                    if (nr < 0 || nr >= this.numRows || nc < 0 || nc >= this.numCols || this.gameBoard[nr][nc] !== color) break;
                     count++;
                 }
 
                 return count >= 4;
             }
+        }
 
-            restartButton.addEventListener("click", initGame);
-            initGame();
-        });
+        new Connect4(".board", "#status", "#restart");
+    });
 
-    </script>
-</body>
+</script>
 
 </html>

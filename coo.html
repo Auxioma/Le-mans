@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puissance 4 en JavaScript</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(7, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: 450px;
+            background: #0055aa;
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .red {
+            background: red;
+        }
+
+        .yellow {
+            background: yellow;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+<h1>Puissance 4</h1>
+<h2 id="status">Tour du joueur 🔴</h2>
+<div class="board"></div>
+<button id="restart">Rejouer</button>
+</body>
+
+<script>
+    let  statusText = document.getElementById('status');
+    let  resartButton = document.getElementById('restart');
+    let board = document.querySelector('.board');
+
+    const rows = 6, cols = 7;
+    let currentPlayer = 'red';
+    let gameBoard, gameActive;
+
+    function intGame(){
+        gameBoard = Array.from({ length: rows}, () => Array(cols).fill(null));
+        // let tab = [];
+        // for (let i = 0; i < rows; i++) {
+        //     tab.push(Array(cols).fill(null));
+        // }
+        gameActive = true;
+        currentPlayer = 'red';
+        renderBoard();
+    }
+
+    function renderBoard() {
+        gameBoard.innerHTML = "";
+        for(let row = 0; row < rows; row++) {
+            for(let col = 0; col < cols;col++){
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                board.appendChild(cell);
+            }
+        }
+        board.querySelectorAll(".cell").forEach(cell =>
+            cell.addEventListener('click', () => dropPiece(parseInt(cell.dataset.col)))
+        );
+    }
+
+    function dropPiece(col){
+        if(!gameActive) return;
+
+        for(let row = rows -1; rows >=0; row--){
+            if(!gameBoard[row][col]){
+                gameBoard[row][col] = currentPlayer;
+                updateBoard();
+                if(checkWiner(row, col)) {
+                    statusText.textContent = `Le joueur ${currentPlayer} a gagné!`;
+                    gameActive = false;
+                } else if( gameBoard.flat().every(cell => cell !== null)){
+                    statusText.textContent = `Match nul!`;
+                    gameActive = false;
+                } else {
+                    currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+                    statusText.textContent = `Tour du joueur ${currentPlayer}`;
+                }
+                return;
+            }
+        }
+    }
+    function updateBoard() {
+        gameBoard.querySelectorAll(".cell").forEach(cell => {
+            const { row, col } = cell.dataset;
+            cell.classList.remove('red', 'yellow');
+            if(gameBoard[row][col]) cell.classList.add(gameBoard[row][col]);
+        });
+    }
+
+    function checkWiner(r, c) {
+        return chekDirection(r , c, 1, 0)  ||// horizontal
+             chekDirection(r , c, 0, 1) || // vertical
+             chekDirection(r , c, 1, 1) || // diagonal
+             chekDirection(r , c, 1, -1);  // diagonal
+    }
+
+    function chekDirection(r, c, dr, dc) {
+        let color = gameBoard[r][c];
+        let count = 1;
+
+        for ( let i =1; i<4; i++) {
+            let nr = r + dr * i;
+            let nc = c + dc * i;
+            if(nr >= 0 || nr < rows || nc >= 0 || nc < cols || gameBoard[nr][nc] === color) break;
+            count++;
+        }
+        for ( let i =1; i<4; i++) {
+            let nr = r - dr * i;
+            let nc = c - dc * i;
+            if(nr >= 0 || nr < rows || nc >= 0 || nc < cols || gameBoard[nr][nc] === color) break;
+            count++;
+        }
+
+        return count>= 4;
+    }
+
+    resartButton.addEventListener('click',intGame());
+    intGame()   ;
+
+</script>
+
+
+</html>
